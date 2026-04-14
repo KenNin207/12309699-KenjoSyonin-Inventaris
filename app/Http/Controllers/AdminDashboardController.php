@@ -16,7 +16,13 @@ class AdminDashboardController extends Controller
         // Menghitung total transaksi peminjaman yang statusnya masih 'borrowed'
         $sedangDipinjam = Lending::where('status', 'borrowed')->count();
 
+        $totalDamaged = \App\Models\Item::sum('repair');
+
         // Mengirim variabel ke halaman view
-        return view('admin.dashboard', compact('totalBarang', 'sedangDipinjam'));
+        return view('admin.dashboard', compact(
+            'totalBarang',
+            'sedangDipinjam',
+            'totalDamaged', 
+        ));
     }
 }

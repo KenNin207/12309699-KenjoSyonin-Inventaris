@@ -38,7 +38,10 @@ class LendingController extends Controller
             'item_id.*' => 'required|exists:items,id',
             'total' => 'required|array',
             'total.*' => 'required|numeric|min:1',
-            'description' => 'nullable|string'
+            'description' => 'nullable|string',
+            'staff_signature' => 'required',
+            'borrower_signature' => 'required',
+            'due_date' => 'required|date|after_or_equal:today',
         ]);
 
         $itemsRequest = $request->item_id;
@@ -65,6 +68,9 @@ class LendingController extends Controller
                 'borrower_name' => $request->name,
                 'total' => $totalsRequest[$index],
                 'description' => $request->description,
+                'staff_signature' => $request->staff_signature,
+                'borrower_signature' => $request->borrower_signature,
+                'due_date' => $request->due_date,
                 'status' => 'borrowed',
                 'lending_date' => now(),
             ]);
@@ -99,10 +105,18 @@ class LendingController extends Controller
         // 3. Kembali ke halaman sebelumnya dengan pesan sukses
         return redirect()->back()->with('success', 'Success! Data has been deleted.');
     }
-    
+
     // Fungsi mengekspor data ke Excel
-    public function exportExcel()
+    public function exportExcel(Request $request)
     {
-        return Excel::download(new LendingsExport, 'lendings.xlsx');
-    }   
+        // Ambil data tanggal dari inputan form
+        $start = $request->query('start_date');
+        $end = $request->query('end_date');
+
+        // Kalau ada tanggal, nama filenya jadi spesifik, kalau nggak ada jadi default
+        $fileName = ($start && $end) ? "lendings-$start-to-$end.xlsx" : "lendings-all.xlsx";
+
+        // Kirim tanggalnya ke file LendingsExport
+        return Excel::download(new LendingsExport($start, $end), $fileName);
+    }
 }

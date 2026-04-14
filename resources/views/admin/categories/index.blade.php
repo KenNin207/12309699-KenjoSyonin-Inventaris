@@ -4,6 +4,11 @@
 @section('header', 'Categories Table')
 
 @section('content')
+@error('name')
+    <div class="invalid-feedback">
+        {{ $message }}
+    </div>
+@enderror
     <div class="card shadow-sm">
         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
             <span class="text-muted small">Add, delete, update categories</span>
@@ -27,7 +32,7 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $category->name }}</td>
-                            <td>{{ $category->division_pj ?? '-' }}</td>
+                            <td>{{ $category->division ?? '-' }}</td>
                             <td>{{ $category->items_count }}</td>
                             <td>
                                 <a href="{{ route('categories.edit', $category->id) }}" class="btn btn-warning btn-sm">

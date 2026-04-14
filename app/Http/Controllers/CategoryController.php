@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
@@ -20,19 +21,25 @@ class CategoryController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'division_pj' => 'required|string',
-        ]);
+{
+    $request->validate([
+        'division' => 'required|string',
+        'name' => [
+            'required',
+            'string',
+            Rule::unique('categories')->where(function ($query) use ($request) {
+                return $query->where('name', $request->name)
+                             ->where('division', $request->division);
+            }),
+        ],
+    ], [
+        'name.unique' => 'Kategori dengan nama dan divisi ini sudah ada!',
+    ]);
 
-        Category::create([
-            'name' => $request->name,
-            'division_pj' => $request->division_pj,
-        ]);
+    \App\Models\Category::create($request->all());
 
-        return redirect()->route('categories.index');
-    }
+    return redirect()->route('categories.index')->with('success', 'Success add category!');
+}
     public function edit($id)
     {
         $category = Category::findOrFail($id);
@@ -40,18 +47,24 @@ class CategoryController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'division_pj' => 'required|string',
-        ]);
+{
+    $request->validate([
+        'division' => 'required|string',
+        'name' => [
+            'required',
+            'string',
+            Rule::unique('categories')->where(function ($query) use ($request) {
+                return $query->where('name', $request->name)
+                             ->where('division', $request->division);
+            })->ignore($id), // Abaikan ID ini biar bisa save data yang sama
+        ],
+    ], [
+        'name.unique' => 'Kategori dengan nama dan divisi ini sudah ada!',
+    ]);
 
-        $category = Category::findOrFail($id);
-        $category->update([
-            'name' => $request->name,
-            'division_pj' => $request->division_pj,
-        ]);
+    $category = \App\Models\Category::findOrFail($id);
+    $category->update($request->all());
 
-        return redirect()->route('categories.index');
-    }
+   return redirect()->route('categories.index')->with('success', 'Success update category!');
+}
 }

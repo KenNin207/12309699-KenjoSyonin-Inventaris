@@ -64,9 +64,7 @@ Route::middleware(['auth', CheckRole::class . ':admin'])->prefix('admin')->group
 Route::middleware(['auth', CheckRole::class . ':staff'])->prefix('staff')->group(function () {
 
     // Dashboard staff
-    Route::get('/dashboard', function () {
-        return view('staff.dashboard');
-    })->name('staff.dashboard');
+Route::get('/dashboard', [App\Http\Controllers\StaffDashboardController::class, 'index'])->name('staff.dashboard');
 
     // Items staff
     Route::get('/items', [ItemController::class, 'staffIndex'])->name('staff.items.index');

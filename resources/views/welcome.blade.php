@@ -26,10 +26,9 @@
     </nav>
 
     <div class="container hero-section">
-        <h1>Inventory Management of<br>SMK Wikrama</h1>
+        <h1>Aplikasi Manajemen Inventaris<br>SMK Wikrama</h1>
         <p class="text-muted mt-3">Management of incoming and outgoing items at SMK Wikrama Bogor.</p>
         <div class="mt-5">
-            <img src="https://via.placeholder.com/600x300?text=Ilustrasi+Orang+Angkat+Barang" alt="Ilustrasi" class="img-fluid">
         </div>
     </div>
 

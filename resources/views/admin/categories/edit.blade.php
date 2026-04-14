@@ -4,6 +4,15 @@
 @section('header', 'Edit Category Forms')
 
 @section('content')
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
 <div class="card shadow-sm col-md-8">
     <div class="card-body">
         <form action="{{ route('categories.update', $category->id) }}" method="POST">
@@ -15,7 +24,7 @@
             </div>
             <div class="mb-3">
                 <label class="form-label fw-bold">Division PJ</label>
-                <select name="division_pj" class="form-select" required>
+                <select name="division" class="form-select" required>
                     @foreach(['Sarpras', 'Tata Usaha', 'Tefa'] as $div)
                         <option value="{{ $div }}" {{ $category->division_pj == $div ? 'selected' : '' }}>{{ $div }}</option>
                     @endforeach

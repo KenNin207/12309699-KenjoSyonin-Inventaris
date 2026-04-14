@@ -9,7 +9,7 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $guarded = []; // Mengizinkan simpan data
+    protected $fillable = ['name', 'division'];
 
     // Relasi untuk menghitung jumlah barang di kategori ini
     public function items()
