@@ -48,7 +48,6 @@ class UserController extends Controller
         ]);
 
         // Kembalikan ke halaman index, sambil membawa data password yang belum dienkripsi
-        // Data ini disimpan sementara di dalam "session" agar bisa ditampilkan di Alert
         return redirect()->route('users.index')
             ->with('success', 'Akun berhasil ditambahkan!')
             ->with('generated_password', $rawPassword);
