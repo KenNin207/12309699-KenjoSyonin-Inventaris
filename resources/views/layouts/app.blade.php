@@ -101,7 +101,7 @@
                         </li>
 
                         <li class="nav-item">
-                            <a href="{{ route('users.operator') }}"
+                            <a href="{{ route('users.staff') }}"
                                 class="nav-link p-0 {{ request()->routeIs('users.operator') ? 'text-warning fw-bold' : 'text-white' }}">
                                 Operator
                             </a>
@@ -113,16 +113,29 @@
 
             @if (Auth::user()->role === 'staff')
                 <li class="nav-item">
-                    <a href="{{ route('staff.dashboard') }}" class="nav-link active"><i class="bi bi-speedometer2"></i>
+                    <a href="{{ route('staff.dashboard') }}"
+                        class="nav-link {{ request()->routeIs('staff.dashboard*') ? 'bg-primary text-white' : 'text-secondary'}}"><i
+                            class="bi bi-speedometer2"></i>
                         Dashboard</a>
                 </li>
                 <li class="nav-item mt-3">
                     <small class="text-muted px-3 text-uppercase" style="font-size: 0.75rem;">Transaksi</small>
                 </li>
-                <li class="nav-item">
-                    <a href="{{ route('lendings.index') }}" class="nav-link"><i class="bi bi-cart-plus"></i> Peminjaman
-                        Barang</a>
-                </li>
+
+                <a href="{{ route('staff.items.index') }}"
+                    class="nav-link {{ request()->routeIs('staff.items.*') ? 'bg-primary text-white' : 'text-secondary' }}">
+                    <i class="bi bi-box"></i> Data Barang
+                </a>
+                <a href="{{ route('lendings.index') }}"
+                    class="nav-link {{ request()->routeIs('lendings.*') ? 'bg-primary text-white' : 'text-secondary' }} }}"><i
+                        class="bi bi-cart-plus"></i> Peminjaman
+                    Barang</a>
+                <a href="{{ route('staff.profile.edit') }}"
+                    class="nav-link {{ request()->routeIs('staff.profile.*') ? 'bg-primary text-white' : 'text-secondary' }}"><i
+                    class="bi bi-people"></i> Profile
+                </a>
+
+
             @endif
 
         </ul>

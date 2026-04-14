@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Exports\UsersExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserController extends Controller
 {
@@ -107,8 +109,8 @@ class UserController extends Controller
         return view('admin.users.index', compact('users'));
     }
 
-    // Menampilkan khusus Operator/Staff
-    public function operatorList()
+    // Menampilkan khusus Staff
+    public function staffList()
     {
         $users = \App\Models\User::where('role', 'staff')->latest()->get();
 
@@ -136,5 +138,54 @@ class UserController extends Controller
         return redirect()->back()
             ->with('success', 'Password akun ' . $user->name . ' berhasil di-reset!')
             ->with('generated_password', $rawPassword);
+    }
+
+    // Export khusus Admin
+    public function exportAdmin()
+    {
+        return Excel::download(new UsersExport('admin'), 'admin-accounts.xlsx');
+    }
+
+    // Export khusus Staff
+    public function exportStaff()
+    {
+        return Excel::download(new UsersExport('staff'), 'staff-accounts.xlsx');
+    }
+
+    // Menampilkan form edit profil
+    public function editProfile()
+    {
+        // Ambil data user yang sedang login saat ini
+        $user = auth()->user(); 
+        return view('staff.users.edit', compact('user'));
+    }
+
+    //  Memproses perubahan data
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        // Validasi input 
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+        ]);
+
+        // Siapkan data dasar yang pasti diubah
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+        ];
+
+        // Jika kolom password diisi teks baru, masukkan ke dalam data yang akan di-update
+        if ($request->filled('password')) {
+            $data['password'] = bcrypt($request->password);
+        }
+
+        // Lakukan proses update ke database
+        $user->update($data);
+
+        // Kembalikan ke halaman form dengan pesan sukses
+        return redirect()->back()->with('success', 'Profile has been successfully updated!');
     }
 }   

@@ -9,17 +9,17 @@ class Lending extends Model
 {
     use HasFactory;
 
-    protected $guarded = []; // Izinkan simpan data
+    protected $guarded = [];
 
-    // Relasi ke User (Siapa yang meminjam)
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
-    // Relasi ke Item (Barang apa yang dipinjam)
+    // Relasi ke tabel items (untuk mengambil nama barang)
     public function item()
     {
         return $this->belongsTo(Item::class);
+    }
+
+    // Relasi ke tabel users (untuk mengambil nama staff yang menginput data)
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

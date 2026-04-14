@@ -1,90 +1,95 @@
-@extends('layouts.app')
+@extends('layouts.app') 
 
-@section('title', 'Peminjaman Barang')
-@section('header', 'Transaksi Peminjaman')
+@section('title', 'Lending Data')
 
 @section('content')
-
-@if (session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
-<div class="row">
-    <div class="col-md-4 mb-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white fw-bold text-primary">Form Peminjaman</div>
-            <div class="card-body">
-                <form action="{{ route('lendings.store') }}" method="POST">
-                    @csrf
-                    <div class="mb-3">
-                        <label class="form-label">Pilih Barang</label>
-                        <select name="item_id" class="form-select" required>
-                            <option value="" disabled selected>-- Pilih Barang Tersedia --</option>
-                            @foreach ($items as $item)
-                                <option value="{{ $item->id }}">{{ $item->name }} (Stok: {{ $item->quantity }})</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Tanggal Pinjam</label>
-                        <input type="date" name="lending_date" class="form-control" required value="{{ date('Y-m-d') }}">
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Catat Pinjaman</button>
-                </form>
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body d-flex justify-content-between align-items-center py-3">
+            <div>
+                <h5 class="m-0 fw-bold text-dark">Lending Table</h5>
+                <small class="text-muted">Data of <span style="color: #d63384;">.lendings</span></small>
+            </div>
+            <div>
+                <a href="{{ route('lendings.export') }}" class="btn text-white me-2 shadow-sm" style="background-color: #6f42c1;">
+                    Export Excel
+                </a>
+                <a href="{{ route('lendings.create') }}" class="btn btn-success shadow-sm">
+                    <i class="bi bi-plus-square"></i> Add
+                </a>
             </div>
         </div>
     </div>
 
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white fw-bold">Riwayat Peminjaman</div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover m-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Barang</th>
-                                <th>Peminjam</th>
-                                <th>Tgl Pinjam</th>
-                                <th>Tgl Kembali</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
+    @if(session('success'))
+        <div class="alert alert-success text-success bg-light border-success opacity-75 mb-4" style="background-color: #d1e7dd !important;">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table align-middle table-borderless table-hover">
+                    <thead class="border-bottom">
+                        <tr>
+                            <th class="py-3">#</th>
+                            <th>Item</th>
+                            <th>Total</th>
+                            <th>Name</th>
+                            <th>Ket.</th>
+                            <th>Date</th>
+                            <th>Returned</th>
+                            <th>Edited By</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($lendings as $index => $lending)
+                            <tr class="border-bottom">
+                                <td class="py-3">{{ $index + 1 }}</td>
+                                
+                                <td>{{ $lending->item->name ?? '-' }}</td>
+                                
+                                <td>{{ $lending->total }}</td>
+                                <td>{{ $lending->borrower_name }}</td>
+                                <td>{{ $lending->description }}</td>
+                                
+                                <td>{{ $lending->created_at->format('d F, Y') }}</td>
+                                
+                                <td>
+                                    @if($lending->status == 'returned')
+                                        <span class="badge border border-success text-success bg-white px-2 py-1">returned</span>
+                                    @else
+                                        <span class="badge border border-warning text-warning bg-white px-2 py-1">not returned</span>
+                                    @endif
+                                </td>
+                                
+                                <td class="fw-bold">{{ $lending->user->name ?? 'staff' }}</td>
+                                
+                                <td>
+                                    @if($lending->status != 'returned')
+                                        <form action="{{ route('lendings.return', $lending->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('PUT')
+                                            <button type="submit" class="btn btn-warning btn-sm text-white shadow-sm">Return</button>
+                                        </form>
+                                    @endif
+
+                                    <form action="{{ route('lendings.destroy', $lending->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus data ini?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm shadow-sm">Delete</button>
+                                    </form>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($lendings as $lending)
-                                <tr>
-                                    <td>{{ $lending->item->name }}</td>
-                                    <td>{{ $lending->user->name }}</td>
-                                    <td>{{ $lending->lending_date }}</td>
-                                    <td>{{ $lending->return_date ?? '-' }}</td>
-                                    <td>
-                                        @if($lending->status === 'borrowed')
-                                            <span class="badge bg-warning text-dark">Dipinjam</span>
-                                        @else
-                                            <span class="badge bg-success">Dikembalikan</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($lending->status === 'borrowed')
-                                            <form action="{{ route('lendings.return', $lending->id) }}" method="POST">
-                                                @csrf
-                                                @method('PUT')
-                                                <button class="btn btn-sm btn-success text-white">Kembalikan</button>
-                                            </form>
-                                        @else
-                                            <span class="text-muted text-center">-</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="6" class="text-center text-muted py-3">Belum ada transaksi peminjaman.</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                        @empty
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-4">Belum ada data peminjaman.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
-</div>
 @endsection

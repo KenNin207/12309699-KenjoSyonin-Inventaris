@@ -14,9 +14,9 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, $role): Response
     {
-        // Pastikan user sudah login DAN role-nya sesuai dengan yang diminta route
+        // Pastikan user sudah login dan role-nya sesuai dengan yang diminta route
         if (Auth::check() && Auth::user()->role === $role) {
-            return $next($request); // Silakan lewat
+            return $next($request);
         }
 
         // Jika role tidak sesuai, tampilkan error 403 (Forbidden)

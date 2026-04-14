@@ -113,4 +113,22 @@ class ItemController extends Controller
         return Excel::download(new ItemsExport, 'items.xlsx');
     }
 
+    // Menampilkan halaman Items khusus Staff
+    public function staffIndex()
+    {
+        $items = \App\Models\Item::with('category')
+            ->withCount(['lendings' => function ($query) {
+                // Menghitung jumlah baris peminjaman yang belum dikembalikan
+                $query->where('status', 'borrowed');
+            }])
+            ->withSum(['lendings' => function ($query) {
+                // Menjumlahkan angka di kolom 'total' pada tabel lendings
+                $query->where('status', 'borrowed');
+            }], 'total')
+            ->latest()
+            ->get();
+
+        return view('staff.items.index', compact('items'));
+    }
+
 }

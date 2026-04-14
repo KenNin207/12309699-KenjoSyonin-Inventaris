@@ -6,55 +6,103 @@ use App\Models\Item;
 use App\Models\Lending;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\LendingsExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class LendingController extends Controller
 {
     public function index()
     {
-        // Ambil riwayat peminjaman. with() digunakan untuk mengambil data relasi sekaligus.
-        $lendings = Lending::with(['item', 'user'])->latest()->get();
-        
-        // Ambil barang yang stoknya lebih dari 0 untuk form peminjaman
-        $items = Item::where('quantity', '>', 0)->get();
+        // Mengambil semua data lending beserta relasi tabel item dan user
+        // latest() digunakan agar data terbaru muncul di paling atas
+        $lendings = \App\Models\Lending::with(['item', 'user'])->latest()->get();
 
-        return view('staff.lendings.index', compact('lendings', 'items'));
+        return view('staff.lendings.index', compact('lendings'));
     }
 
+    // 1. Menampilkan halaman form
+    public function create()
+    {
+        // Ambil semua data barang untuk ditampilkan di pilihan dropdown
+        $items = \App\Models\Item::all();
+        return view('staff.lendings.create', compact('items'));
+    }
+
+    // 2. Memproses data dari form
     public function store(Request $request)
     {
+        // Validasi input: perhatikan penggunaan .* karena data berupa array (banyak)
         $request->validate([
-            'item_id' => 'required',
-            'lending_date' => 'required|date',
+            'name' => 'required|string|max:255',
+            'item_id' => 'required|array',
+            'item_id.*' => 'required|exists:items,id',
+            'total' => 'required|array',
+            'total.*' => 'required|numeric|min:1',
+            'description' => 'nullable|string'
         ]);
 
-        // 1. Simpan data peminjaman
-        Lending::create([
-            'user_id' => Auth::id(), // ID staff yang sedang login
-            'item_id' => $request->item_id,
-            'lending_date' => $request->lending_date,
-            'status' => 'borrowed',
-        ]);
+        $itemsRequest = $request->item_id;
+        $totalsRequest = $request->total;
 
-        // 2. Kurangi stok barang secara otomatis
-        $item = Item::findOrFail($request->item_id);
-        $item->decrement('quantity');
+        // Pengecekan Ketersediaan Stok
+        foreach ($itemsRequest as $index => $itemId) {
+            $item = \App\Models\Item::find($itemId);
 
-        return redirect()->back()->with('success', 'Barang berhasil dipinjam!');
+            // Jika jumlah yang dipinjam lebih besar dari stok yang ada
+            if ($totalsRequest[$index] > $item->quantity) {
+                // Gagalkan proses dan kembalikan ke form dengan pesan error merah
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Total item more than available!');
+            }
+        }
+
+        // Jika semua stok aman, simpan ke database
+        foreach ($itemsRequest as $index => $itemId) {
+            \App\Models\Lending::create([
+                'item_id' => $itemId,
+                'user_id' => auth()->id(),
+                'borrower_name' => $request->name,
+                'total' => $totalsRequest[$index],
+                'description' => $request->description,
+                'status' => 'borrowed',
+                'lending_date' => now(),
+            ]);
+
+        }
+
+        // Kembalikan ke tabel lending dengan pesan sukses hijau
+        return redirect()->route('lendings.index')->with('success', 'Success add new lending item!');
     }
-
+    // Fungsi untuk memproses pengembalian barang
     public function returnItem($id)
     {
-        $lending = Lending::findOrFail($id);
+        $lending = \App\Models\Lending::findOrFail($id);
 
-        // 1. Update status dan tanggal kembali
         $lending->update([
-            'return_date' => now(), // Tanggal hari ini
             'status' => 'returned',
+            'return_date' => now()
         ]);
 
-        // 2. Tambahkan kembali stok barang
-        $lending->item->increment('quantity');
-
-        return redirect()->back()->with('success', 'Barang berhasil dikembalikan!');
+        return redirect()->back()->with('success', 'Success! Item has been returned.');
     }
+
+    // Menghapus data riwayat peminjaman
+    public function destroy($id)
+    {
+        // 1. Cari data berdasarkan ID
+        $lending = \App\Models\Lending::findOrFail($id);
+
+        // 2. Hapus data dari database
+        $lending->delete();
+
+        // 3. Kembali ke halaman sebelumnya dengan pesan sukses
+        return redirect()->back()->with('success', 'Success! Data has been deleted.');
+    }
+    
+    // Fungsi mengekspor data ke Excel
+    public function exportExcel()
+    {
+        return Excel::download(new LendingsExport, 'lendings.xlsx');
+    }   
 }

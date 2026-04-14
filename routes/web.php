@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminDashboardController;
 // use App\Http\Controllers\StaffDashboardController;
 
+
 // Halaman Landing Page
 Route::get('/', function () {
     return view('welcome');
@@ -19,13 +20,13 @@ Route::get('/', function () {
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Route untuk Admin
+// Route untuk admin
 Route::middleware(['auth', CheckRole::class . ':admin'])->prefix('admin')->group(function () {
 
-    // Dashboard Admin
+    // Dashboard admin
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
-    // Items
+    // Items admin
     Route::get('/items', [ItemController::class, 'index'])->name('items.index');
     Route::get('/items/create', [ItemController::class, 'create'])->name('items.create');
     Route::post('/items', [ItemController::class, 'store'])->name('items.store');
@@ -46,7 +47,7 @@ Route::middleware(['auth', CheckRole::class . ':admin'])->prefix('admin')->group
 
     // Users (Dipisah berdasarkan Role)
     Route::get('/users/admin', [UserController::class, 'adminList'])->name('users.admin');
-    Route::get('/users/operator', [UserController::class, 'operatorList'])->name('users.operator');
+    Route::get('/users/staff', [UserController::class, 'staffList'])->name('users.staff');
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
@@ -54,18 +55,33 @@ Route::middleware(['auth', CheckRole::class . ':admin'])->prefix('admin')->group
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::put('/users/{id}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
+
+    Route::get('/users/admin/export', [UserController::class, 'exportAdmin'])->name('users.export.admin');
+    Route::get('/users/staff/export', [UserController::class, 'exportStaff'])->name('users.export.staff');
 });
 
 // Route untuk Staff
 Route::middleware(['auth', CheckRole::class . ':staff'])->prefix('staff')->group(function () {
 
-    // Dashboard Staff
+    // Dashboard staff
     Route::get('/dashboard', function () {
         return view('staff.dashboard');
     })->name('staff.dashboard');
 
-    // Fitur Peminjaman
+    // Items staff
+    Route::get('/items', [ItemController::class, 'staffIndex'])->name('staff.items.index');
+
+    // Fitur Peminjaman staff
     Route::get('/lendings', [LendingController::class, 'index'])->name('lendings.index');
+    Route::get('/lendings/create', [LendingController::class, 'create'])->name('lendings.create'); 
     Route::post('/lendings', [LendingController::class, 'store'])->name('lendings.store');
     Route::put('/lendings/{id}/return', [LendingController::class, 'returnItem'])->name('lendings.return');
+
+    // Delete staff
+    Route::delete('/lendings/{id}', [LendingController::class, 'destroy'])->name('lendings.destroy');
+    // Export excel staff
+    Route::get('/lendings/export', [LendingController::class, 'exportExcel'])->name('lendings.export');
+
+    Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('staff.profile.edit');
+    Route::put('/profile/update', [UserController::class, 'updateProfile'])->name('staff.profile.update');
 });

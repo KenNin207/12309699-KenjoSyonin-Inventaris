@@ -31,9 +31,23 @@
             <div>
                 <span class="text-muted small d-block">Add, delete, update admin-accounts</span>
             </div>
-            <a href="{{ route('users.create') }}" class="btn btn-success btn-sm">
-                <i class="bi bi-plus"></i> Add
-            </a>
+            <div>
+
+                @if(request()->routeIs('users.admin'))
+                    <a href="{{ route('users.export.admin') }}" class="btn btn-sm text-white"
+                        style="background-color: #6f42c1;">
+                        Export Excel
+                    </a>
+                @elseif(request()->routeIs('users.staff'))
+                    <a href="{{ route('users.export.staff') }}" class="btn btn-sm text-white"
+                        style="background-color: #6f42c1;">
+                        Export Excel
+                    </a>
+                @endif
+                <a href="{{ route('users.create') }}" class="btn btn-success btn-sm">
+                    <i class="bi bi-plus"></i> Add
+                </a>
+            </div>
         </div>
         <div class="card-body">
             <table class="table table-bordered text-center">
@@ -72,7 +86,7 @@
                                         Edit
                                     </a>
                                 @endif
-                                
+
                                 @if(auth()->id() !== $user->id)
                                     <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="d-inline"
                                         onsubmit="return confirm('Hapus akun ini?')">
